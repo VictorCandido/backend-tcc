@@ -38,8 +38,8 @@ Para continuar a conversa com o bot, é necessário fazer uma requisição do ti
 http://localhost:3333/api/chatbot
 ```
 Porém, agora, é necessário passar 2 parametros no corpo da requisição:
-* input. Deve conter o texto de entrada do usuário;
-* context. Deve conter o contexto retornado na requisição anterior pelo chatbot, para que ele saiba o que responder logo em seguida.
+* **input**. Deve conter o texto de entrada do usuário;
+* **context**. Deve conter o contexto retornado na requisição anterior pelo chatbot, para que ele saiba o que responder logo em seguida.
 
 Exemplo do corpo da requisição:
 ```
