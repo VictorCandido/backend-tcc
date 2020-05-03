@@ -1,9 +1,11 @@
+const express = require('express');
 const AssistantV1 = require('ibm-watson/assistant/v1');
 const { IamAuthenticator } = require('ibm-watson/auth');
 const prompt = require('prompt-sync')();
 require('dotenv').config();
 
-const assistantId = process.env.ASSISTANT_ID;
+const app = express();
+
 const workspaceId = process.env.WORKSPACE_ID;
 
 const assistant = new AssistantV1({
@@ -14,54 +16,41 @@ const assistant = new AssistantV1({
     url: process.env.URL
 });
 
-// assistant.createSession({
-//     assistantId
-// }).then(res => {
-//     const sessionId = res.result.session_id;
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-//     assistant.message({
-//         assistantId,
-//         sessionId,
-//     }).then(result => handleResponse(result, sessionId)).catch(handleError);
-// }).catch(err => {
-//     console.log(err);
-// });
+app.get('/api/chatbot', (req, res) => {
+    assistant.message({
+        workspaceId
+    }).then(response => {
+        res.status(200).json(response.result);
+    }).catch(err => {
+        console.error(err);
+        res.status(err.code || 500).json({ 
+            message: 'Falha ao iniciar chat', 
+            error: err.message 
+        });
+    });
+});
 
-assistant.message({
-    workspaceId
-}).then(handleResponse).catch(handleError);
+app.post('/api/chatbot', (req, res) => {
+    const { context, input } = req.body;
 
-let continuaConversa = true;
-
-function handleResponse (res) {
-    const { intents, context, output } = res.result;
-
-    if (output.text.length) {
-        output.text.forEach(msg => console.log(msg));
+    let payload = {
+        workspaceId,
+        context: context || {},
+        input: input || {}
     }
 
-    if (intents.length) {
-        const intent = intents[0].intent;
-        if (intent == 'Despedida') {
-            continuaConversa = false;
-        }
-    }
+    assistant.message(payload).then(response => {
+        res.status(200).json(response.result);
+    }).catch(err => {
+        console.error(err);
+        res.status(err.code || 500).json({ 
+            message: 'Falha na comunicação com o chat', 
+            error: err.message 
+        });
+    });
+});
 
-    
-    if (continuaConversa) {
-        const mensagem = prompt('>> ');
-        assistant.message({
-            workspaceId,
-            input: {
-                message_type: 'text',
-                text: mensagem
-            },
-            context
-        }).then(handleResponse).catch(handleError);
-    }
-
-    // console.log(JSON.stringify(res, true, 2));
-}
-function handleError (err) {
-    console.log(err);
-}
+app.listen(3333, () => console.log('Server running on port 3333'));
