@@ -11,6 +11,7 @@ URL=https://gateway.watsonplatform.net/assistant/api
 ASSISTANT_ID=8c4587f5-ff10-4803-ada9-55e9746cc8cb
 WORKSPACE_ID=2a055289-e59a-4ebb-8942-8457dd0f9a10
 ```
+Após a edição, deve salvar (ou mudar o nome do arquivo) como `.env` apenas.
 ### Installing
 Será necessário instalar todos os repositórios antes de rodar o serviço. Para isso, basta rodar:
 ```
