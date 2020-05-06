@@ -2,9 +2,11 @@ const express = require('express');
 const AssistantV1 = require('ibm-watson/assistant/v1');
 const { IamAuthenticator } = require('ibm-watson/auth');
 const prompt = require('prompt-sync')();
+const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
+app.use(cors());
 
 const workspaceId = process.env.WORKSPACE_ID;
 
