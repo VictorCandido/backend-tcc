@@ -5,7 +5,7 @@ require('dotenv').config();
 const assistant = new AssistantV1({
     version: process.env.VERSION,
     authenticator: new IamAuthenticator({
-        apikey: process.env.APIKEY
+        apikey: process.env.ASSISTANT_APIKEY
     }),
     url: process.env.URL
 });

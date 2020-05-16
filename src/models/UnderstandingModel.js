@@ -5,9 +5,9 @@ require('dotenv').config();
 const naturalLanguageUnderstanding = new NaturalLanguageUnderstantingV1({
     version: process.env.VERSION,
     authenticator: new IamAuthenticator({
-        apikey: 'iARlYy-vvf74vAQvTVXC5L0ncet3PkYhUv_d4NHw0dVY'
+        apikey: process.env.UNDERSTANDING_APIKEY
     }),
-    url: 'https://api.us-south.natural-language-understanding.watson.cloud.ibm.com/instances/6bb11dd3-34df-4557-b22c-99d436142f9f'
+    url: process.env.UNDERSTANDING_URL
 });
 
 module.exports = naturalLanguageUnderstanding;
