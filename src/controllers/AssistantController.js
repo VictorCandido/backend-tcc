@@ -15,7 +15,7 @@ module.exports = {
         }
     },
 
-    DealConversation (req, res) {
+    async DealConversation (req, res) {
         try {
             const { context, input } = req.body;
     

@@ -14,7 +14,7 @@ module.exports = {
             const audio = speechResponse.result;
 
             const repairedFile = await textToSpeech.repairWavHeaderStream(audio);
-            fs.writeFileSync('audio.wav', repairedFile);
+            fs.writeFileSync(`audios/${new Date().getTime()}audio.wav`, repairedFile);
             console.log('audio.wav written with a corrected wav header');
         } catch (error) {
             console.log('[ERROR!] Fail SpeechToTextController.js.', error)

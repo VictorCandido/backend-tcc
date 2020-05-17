@@ -1,5 +1,7 @@
 const naturalLanguageUnderstanding = require("../models/UnderstandingModel");
 const TranslatorController = require("./TranslatorController");
+const WikipediaController = require("./WikipediaController");
+const SpeechToTextController = require("./SpeechToTextController");
 
 module.exports = {
     async getUnderstanding (req, res) {
@@ -24,10 +26,15 @@ module.exports = {
             
             const analysisResults = await naturalLanguageUnderstanding.analyze(analyzeParams)
             const { keywords } = analysisResults.result;
+            console.log('>> keywords:', keywords)
 
-            console.log('keywords:', keywords)
+            const wikipediaSentences = await WikipediaController.getWikipediaSentences(keywords[0].text)
+            const sentence = wikipediaSentences[0] + ' ' + wikipediaSentences[1];
+            console.log('>> Wikipedia return\n', sentence)
             
-            res.status(200).json(analysisResults);
+            SpeechToTextController.getVoiceAudio(sentence)
+
+            res.status(200).json(sentence);
         } catch (error) {
             console.log('[ERROR!] Fail at UnderstaningController.js.', error)
             throw error;
