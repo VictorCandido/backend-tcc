@@ -1,5 +1,4 @@
 const assistant = require('../models/AssistantModel');
-
 require('dotenv').config();
 
 module.exports = {
