@@ -2,21 +2,23 @@ const fs = require('fs');
 const textToSpeech = require('../models/SpeechToTextModel');
 
 module.exports = {
-    getVoiceAudio(text) {
-        const params = {
-            text,
-            voice: 'pt-BR_IsabelaV3Voice',
-            accept: 'audio/wav'
-        };
+    async getVoiceAudio(text) {
+        try {
+            const params = {
+                text,
+                voice: 'pt-BR_IsabelaV3Voice',
+                accept: 'audio/wav'
+            };
+    
+            const speechResponse = await textToSpeech.synthesize(params)
+            const audio = speechResponse.result;
 
-        textToSpeech.synthesize(params).then(response => {
-            const audio = response.result;
-            return textToSpeech.repairWavHeaderStream(audio);
-        }).then(repairedFile => {
+            const repairedFile = await textToSpeech.repairWavHeaderStream(audio);
             fs.writeFileSync('audio.wav', repairedFile);
             console.log('audio.wav written with a corrected wav header');
-        }).catch(err => {
-            console.log('[ERROR!] Fail in get speech audio.', err)
-        })
+        } catch (error) {
+            console.log('[ERROR!] Fail SpeechToTextController.js.', error)
+            throw error;
+        }
     }
 }

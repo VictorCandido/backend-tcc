@@ -2,37 +2,35 @@ const assistant = require('../models/AssistantModel');
 require('dotenv').config();
 
 module.exports = {
-    startConversation (req, res) {
-        assistant.message({
-            workspaceId: process.env.WORKSPACE_ID
-        }).then(response => {
-            res.status(200).json(response.result);
-        }).catch(err => {
-            console.error(err);
-            res.status(err.code || 500).json({ 
-                message: 'Falha ao iniciar chat', 
-                error: err.message 
-            });
-        });
+    async startConversation (req, res) {
+        try {
+            const assistantResponse = await assistant.message({
+                workspaceId: process.env.WORKSPACE_ID
+            })
+            
+            res.status(200).json(assistantResponse.result);
+        } catch (error) {
+            console.log('[ERROR!] Fail at AssistantController.js in startConversation function.', error);
+            throw error
+        }
     },
 
     DealConversation (req, res) {
-        const { context, input } = req.body;
+        try {
+            const { context, input } = req.body;
     
-        let payload = {
-            workspaceId: process.env.WORKSPACE_ID,
-            context: context || {},
-            input: input || {}
+            let payload = {
+                workspaceId: process.env.WORKSPACE_ID,
+                context: context || {},
+                input: input || {}
+            }
+        
+            const assistantResponse = await assistant.message(payload)
+                
+            res.status(200).json(assistantResponse.result);
+        } catch (error) {
+            console.log('[ERROR!] Fail at AssistantController.js in DealConversation function.', error);
+            throw error
         }
-    
-        assistant.message(payload).then(response => {
-            res.status(200).json(response.result);
-        }).catch(err => {
-            console.error(err);
-            res.status(err.code || 500).json({ 
-                message: 'Falha na comunicação com o chat', 
-                error: err.message 
-            });
-        });
     }
 }

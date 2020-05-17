@@ -1,37 +1,36 @@
 const naturalLanguageUnderstanding = require("../models/UnderstandingModel");
+const TranslatorController = require("./TranslatorController");
 
 module.exports = {
-    getUnderstanding (req, res) {
-        const { text } = req.body;
-        const analyzeParams = {
-            text,
-            'features': {
-                'categories': {},
-                'concepts': {},
-                'entities': {},
-                'keywords': {},
-                'relations': {},
-                'semantic_roles': {},
-                'sentiment': {},
-                'syntax': {}
-            }
-        };
+    async getUnderstanding (req, res) {
+        try {
+            const { text } = req.body;
         
-        naturalLanguageUnderstanding.analyze(analyzeParams).then(analysisResults => {
-              console.log(JSON.stringify(analysisResults, null, 2));
-        
-            //   console.log('Eu identifiquei as palavras-chave:');
-            //   analysisResults.result.keywords.forEach(keyword => {
-            //       console.log(keyword.text + ' com relevância de ' + (keyword.relevance * 100) + '%')
-            //   })
-    
-              res.status(200).json(analysisResults);
-        }).catch(err => {
-            console.log('error:', err);
-            res.status(err.code || 500).json({ 
-                message: 'Falha na comunicação com o watson', 
-                error: err.message 
-            });
-        });
+            const textInEnglish = await TranslatorController.translate(text);
+
+            const analyzeParams = {
+                text: textInEnglish,
+                'features': {
+                    'categories': {},
+                    'concepts': {},
+                    'entities': {},
+                    'keywords': {},
+                    'relations': {},
+                    'semantic_roles': {},
+                    'sentiment': {},
+                    'syntax': {}
+                }
+            };
+            
+            const analysisResults = await naturalLanguageUnderstanding.analyze(analyzeParams)
+            const { keywords } = analysisResults.result;
+
+            console.log('keywords:', keywords)
+            
+            res.status(200).json(analysisResults);
+        } catch (error) {
+            console.log('[ERROR!] Fail at UnderstaningController.js.', error)
+            throw error;
+        }
     }
 }
