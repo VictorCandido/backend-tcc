@@ -31,12 +31,20 @@ module.exports = {
             const wikipediaSentences = await WikipediaController.getWikipediaSentences(keywords[0].text)
             const sentence = wikipediaSentences[0] + ' ' + wikipediaSentences[1];
             console.log('>> Wikipedia return\n', sentence)
-            
-            SpeechToTextController.getVoiceAudio(sentence)
 
-            res.status(200).json(sentence);
+            const backToPortuguese = await TranslatorController.translate(sentence, 'pt')
+            
+            SpeechToTextController.getVoiceAudio(backToPortuguese)
+
+            res.status(200).json(backToPortuguese);
         } catch (error) {
             console.log('[ERROR!] Fail at UnderstaningController.js.', error)
+
+            res.status(404).json({
+                message: 'Fail at fetch some data from Wikipedia API',
+                error
+            });
+
             throw error;
         }
     }
