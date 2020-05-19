@@ -17,7 +17,11 @@
     "express": "^4.17.1",
     "googleapis": "^51.0.0",
     "ibm-watson": "^5.5.0",
+    "jsonp": "^0.2.1",
     "prompt-sync": "^4.2.0",
-    "sbd": "^1.0.18"
+    "readline-sync": "^1.4.10",
+    "sbd": "^1.0.18",
+    "superagent": "^5.2.2",
+    "unidecode": "^0.1.8"
   }
 }

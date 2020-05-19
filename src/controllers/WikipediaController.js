@@ -1,18 +1,58 @@
-const algorithmia = require('algorithmia');
+// const algorithmia = require('algorithmia');
+const superAgent = require('superagent');
 const sentenceBoundaryDetection = require('sbd');
+const environment = require('../config/environment.test');
 require('dotenv').config();
 
 async function fetchContentFromWikipedia(searchTerm) {
-    try {
-        const algorithmiaAuthenticated = algorithmia(process.env.WIKIPEDIA_APIKEY);
-        const wikipediaAlgorithm = algorithmiaAuthenticated.algo('web/WikipediaParser/0.1.2');
-        const wikipediaResponse = await wikipediaAlgorithm.pipe({
-            lang: 'pt',
-            articleName: searchTerm
-        });
-        const wikipediaContent = wikipediaResponse.get();
+    // try {
+    //     const algorithmiaAuthenticated = algorithmia(process.env.WIKIPEDIA_APIKEY);
+    //     const wikipediaAlgorithm = algorithmiaAuthenticated.algo('web/WikipediaParser/0.1.2');
+    //     const wikipediaResponse = await wikipediaAlgorithm.pipe({
+    //         lang: 'pt',
+    //         articleName: searchTerm
+    //     });
+    //     const wikipediaContent = wikipediaResponse.get();
         
-        return wikipediaContent.content;
+    //     return wikipediaContent.content;
+    // } catch (error) {
+    //     console.log('[ERROR!] Fail at WikipediaController.js in fetchContentFromWikipedia function.', error)
+    //     throw error;
+    // }
+
+    try {
+        const res = await superAgent.get(environment.wikipediaApiUrl).query({
+            'action': 'opensearch',
+            'search': searchTerm,
+            'limit': 5,
+            'namespace': 0,
+            'format': "json"
+        })
+
+        if(res.body[1].length == 0){
+            throw {
+                errorType: 'No Result!',
+                errorMessage: 'Fail at getting a result from Wikipedia. There\'s no result for the search!'
+            }
+        }
+
+        const title = res.body[1][0];
+
+        const ret = await superAgent.get(environment.wikipediaApiUrl).query({
+            'action':'query',
+            'prop': 'extracts|images|links|info|extlinks',
+            'redirects': 1,
+            'exsectionformat':'wiki',
+            'explaintext':true,
+            'titles':title,
+            'format':"json"
+        })
+        
+        const { query } = ret.body;
+        const pageId = Object.keys(query.pages);
+        const content = query.pages[pageId].extract;
+
+        return content;
     } catch (error) {
         console.log('[ERROR!] Fail at WikipediaController.js in fetchContentFromWikipedia function.', error)
         throw error;
