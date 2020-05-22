@@ -2,7 +2,7 @@ const assistant = require('../models/AssistantModel');
 require('dotenv').config();
 
 module.exports = {
-    async startConversation (req, res) {
+    async startConversation (req, res, next) {
         try {
             const assistantResponse = await assistant.message({
                 workspaceId: process.env.WORKSPACE_ID
@@ -11,11 +11,11 @@ module.exports = {
             res.status(200).json(assistantResponse.result);
         } catch (error) {
             console.log('[ERROR!] Fail at AssistantController.js in startConversation function.', error);
-            throw error
+            next(error)
         }
     },
 
-    async DealConversation (req, res) {
+    async DealConversation (req, res, next) {
         try {
             const { context, input } = req.body;
     
@@ -26,11 +26,11 @@ module.exports = {
             }
         
             const assistantResponse = await assistant.message(payload)
-                
+
             res.status(200).json(assistantResponse.result);
         } catch (error) {
             console.log('[ERROR!] Fail at AssistantController.js in DealConversation function.', error);
-            throw error
+            next(error)
         }
     }
 }

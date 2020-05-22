@@ -4,7 +4,7 @@ const WikipediaController = require("./WikipediaController");
 const SpeechToTextController = require("./SpeechToTextController");
 
 module.exports = {
-    async getUnderstanding (req, res) {
+    async getUnderstanding (req, res, next) {
         try {
             const { text } = req.body;
         
@@ -40,12 +40,7 @@ module.exports = {
         } catch (error) {
             console.log('[ERROR!] Fail at UnderstaningController.js.', error)
 
-            res.status(404).json({
-                message: 'Fail at fetch some data from Wikipedia API',
-                error
-            });
-
-            throw error;
+            next(error);
         }
     }
 }

@@ -44,7 +44,7 @@ async function fetchContentFromWikipedia(searchTerm) {
             'redirects': 1,
             'exsectionformat':'wiki',
             'explaintext':true,
-            'titles':title,
+            'titles': title,
             'format':"json"
         })
         
