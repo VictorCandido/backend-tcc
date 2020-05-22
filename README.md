@@ -39,14 +39,14 @@ ou até mesmo:
 ```
 node .
 ```
-## API usage
+## Watson Assistant
 Siga as instruções abaixo para usar a API com o chatbot Watson
-### Starting conversation
+### Inciando Conversa
 Para iniciar a conversa com o chatbot e receber a mensagem inicial, faça uma requisição do tipo `GET` para a URL
 ```
 http://localhost:3333/api/chatbot
 ```
-### Continuing the conversation
+### Continuando a Conversa
 Para continuar a conversa com o bot, é necessário fazer uma requisição do tipo `POST` para a URL
 ```
 http://localhost:3333/api/chatbot
@@ -90,3 +90,23 @@ Exemplo do corpo da requisição:
 }
 ```
 Toda vez que for feita uma requisição `POST` para a API, será retornada um contexto. O mesmo deverá ser passado como parâmetro, de forma com que o bot nunca se perca durante a conversa.
+## Watson Natural Language Understanding + Wikipedia
+### About
+Esta parte do projeto tem commo objetivo, receber uma pergunta, identificar as palavras chaves, consultar na API da Wikipedia e retornar um pequeno resumo para o usuário.
+### Used APIs
+- IBM Watson Natural Language Understanding (keywords)
+- IBM Watson Language Translator (Tradução para obter uma melhor precisão)
+- Wikipedia API (Consultas e pesquisas)
+- IBM Watson TextToSpeech (Transformar texto em áudio)
+### Request
+Para consultar a API, é necessário fazer uma requisição do tipo `POST` para a seguite URL:
+```
+http://localhost:3333/api/understanding
+```
+Como **body** da requisição, é necessário passar o seguinte objeto:
+```
+{
+	"text": "Texto a ser analisádo e consultado...."
+}
+```
+A API irá retornar o resumo em forma de **String**.
