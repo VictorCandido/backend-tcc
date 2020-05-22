@@ -4,7 +4,9 @@ Backend do TCC utilizando Watson API pela IBM
 Siga a documentação abaixo para conseguir iniciar o projeto com sucesso.
 ### Prerequisites
 É necessário ter instalado na máquina o [NodeJs](https://nodejs.org/en/) e o [Git](https://git-scm.com/).
+<br/>
 Após a instalação do NodeJs e do Git, rode o comando `git clone https://github.com/VictorCandido/backend-tcc.git` no seu terminal.
+<br/>
 Após dar o clone, abrir arquivo `.env.example` no diretório principal e editar as seguintes linhas:
 ```
 ASSISTANT_APIKEY=ui8U6Yzl8HY7z4i596h-Lu8AttHJAyoyvZlfk0Hj_j5y
