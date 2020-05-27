@@ -4,14 +4,13 @@ const WikipediaController = require("./WikipediaController");
 const SpeechToTextController = require("./SpeechToTextController");
 
 module.exports = {
-    async getUnderstanding (req, res, next) {
-        try {
-            const { text } = req.body;
-        
+    async getUnderstanding (text) {
+        try {        
             const textInEnglish = await TranslatorController.translate(text);
 
             const analyzeParams = {
                 text: textInEnglish,
+                // url: text,
                 'features': {
                     'categories': {},
                     'concepts': {},
@@ -20,23 +19,28 @@ module.exports = {
                     'relations': {},
                     'semantic_roles': {},
                     'sentiment': {},
-                    'syntax': {}
+                    'syntax': {},
+                    // 'metadata': {}
                 }
             };
             
             const analysisResults = await naturalLanguageUnderstanding.analyze(analyzeParams)
+
             const { keywords } = analysisResults.result;
             console.log('>> keywords:', keywords)
 
-            const wikipediaSentences = await WikipediaController.getWikipediaSentences(keywords[0].text)
-            const sentence = wikipediaSentences[0] + ' ' + wikipediaSentences[1];
-            console.log('>> Wikipedia return\n', sentence)
+            // const wikipediaSentences = await WikipediaController.getWikipediaSentences(keywords[0].text)
+            // const sentence = wikipediaSentences[0] + ' ' + wikipediaSentences[1];
+            // console.log('>> Wikipedia return\n', sentence)
 
-            const backToPortuguese = await TranslatorController.translate(sentence, 'pt')
+            // const backToPortuguese = await TranslatorController.translate(sentence, 'pt')
+            const backToPortuguese = ''
             
-            SpeechToTextController.getVoiceAudio(backToPortuguese)
-
-            res.status(200).json(backToPortuguese);
+            return {
+                originalQuestion: text,
+                text: backToPortuguese,
+                keywords
+            };
         } catch (error) {
             console.log('[ERROR!] Fail at UnderstaningController.js.', error)
 
