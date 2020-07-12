@@ -24,8 +24,7 @@ module.exports = {
             return analysisResults;
         } catch (error) {
             console.log('[ERROR!] Fail at UnderstaningController.js.', error)
-
-            next(error);
+            throw error;
         }
     }
 }

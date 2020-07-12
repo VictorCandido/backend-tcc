@@ -1,4 +1,5 @@
 const assistant = require('../models/AssistantModel');
+const { typeMessages, systemRelevance } = require('../config/environment.test');
 const UnderstandingController = require('./UnderstandingController');
 const QuestionController = require('./QuestionController');
 const NeedsAnswerController = require('./NeedsAnswerController');
@@ -14,7 +15,7 @@ module.exports = {
             })
             
             res.status(200).json({
-                type: 'startConversation-answer',
+                type: typeMessages.start_conversation_answer,
                 response: result
             });
         } catch (error) {
@@ -23,6 +24,13 @@ module.exports = {
         }
     },
 
+    /**
+     * Lida com a conversa, analisando o contexto e fazendo a tratativa necessária 
+     * de acordo com as intenções.
+     * @param {*} req Dados da requisição
+     * @param {*} res Dados para a resposta
+     * @param {*} next Próxima middleware (tratativa de erro)
+     */
     async DealConversation (req, res, next) {
         try {
             const { context, input } = req.body;
@@ -33,20 +41,25 @@ module.exports = {
                 input: input || {}
             }
         
+            // Consulta o Watson Assistant passando como parametro dados da conversa
             const { result } = await assistant.message(payload)
 
             if (result.intents.length) {
+                // Se a intenção for relacionado a uma dúvida
                 if (result.intents[0].intent === "duvida") {
                     let categoriesArray = []
                     let validaCategory = false;
 
                     const { text } = result.input;
     
+                    // Faz a tradução do conteúdo para o ingles, para que seja analisado com mais precisão
                     const textInEnglish = await TranslatorController.translate(text);
 
+                    // Faz a analise pelo Watson NLU
                     const analysisResults = await UnderstandingController.getUnderstanding(textInEnglish)
                     const { keywords, categories } = analysisResults.result;
 
+                    // Faz a validação do contexto da pergunta enviada pelo aluno
                     categories.forEach(category => {
                         category.label.split('/').forEach(split => {
                             if (split) categoriesArray.push(split)
@@ -62,19 +75,17 @@ module.exports = {
 
                     if (!validaCategory) {
                         res.status(200).json({
-                            type: 'category-not-allowed'
+                            type: typeMessages.not_allowed
                         })
                         return;
                     }
 
-                    console.log('>> keywords:', keywords)
-
+                    // Consulta a palavra-chave na API da Wikipedia
                     const wikipediaSentences = await WikipediaController.getWikipediaSentences(keywords[0].text)
                     const sentence = wikipediaSentences[0] + ' ' + wikipediaSentences[1];
-                    console.log('>> Wikipedia return\n', sentence)
 
+                    // Retorna o conteúdo encontrado para português
                     const backToPortuguese = await TranslatorController.translate(sentence, 'pt')
-                    // const backToPortuguese = ''
                     
                     const finalResult =  {
                         originalQuestion: text,
@@ -82,23 +93,26 @@ module.exports = {
                         keywords
                     };
     
+                    // Retorno da requisição
                     res.status(200).json({
-                        type: 'question-success',
+                        type: typeMessages.question_success,
                         response: finalResult
                     })
                     return;
                 } 
 
+                // Tratativa da resposta de "A resposta foi útil?"
                 if (context.foiUtil) {
                     if (result.entities[0].value === 'sim') {
                         // Resposta útil, segue a vida
                         res.status(200).json({
-                            type: 'util-sim'
+                            type: typeMessages.util
                         })
 
                         return;
                     } else {
-                        // Registra como uma pergunta e espera uma resposta
+                        // Consulta no banco de dados todas as respostas salvas e analisa de acordo com a relevancia
+                        // para que seja encontrada uma resposta correta já registrada ou não.
                         const dbQuestions = await QuestionController.findAll();
                         let resposta = false;
 
@@ -112,7 +126,7 @@ module.exports = {
                                     if (context.keywords[j].text.toLocaleLowerCase() === keywords[k].text.toLocaleLowerCase()) {
                                         const relevanceDiff = Math.abs(context.keywords[j].relevance - keywords[k].relevance);
 
-                                        if (relevanceDiff > 0.2) continue;
+                                        if (relevanceDiff > systemRelevance) continue;
 
                                         counter++;
                                         break;
@@ -127,23 +141,22 @@ module.exports = {
                         }
 
                         if (resposta) {
-                            console.log('ENCONTROU A RESPOSTA')
-                            console.log(resposta)
+                            // Se tiver encontrado uma resposta, retorna ela.
                             res.status(200).json({
-                                type: 'db-answer',
+                                type: typeMessages.db_answer,
                                 response: resposta
                             })
 
                             return;
                         } else {
-                            console.log('NÃO ENCONTROU A RESPOSTA')
+                            // Se não tiver encontrado a resposta, salva a pergunta no banco como uma questão sem resposta.
                             NeedsAnswerController.store({
                                 question: context.originalQuestion,
                                 keywords: JSON.stringify(context.keywords)
                             })
 
                             res.status(200).json({
-                                type: 'answer-not-found'
+                                type: typeMessages.not_found
                             })
 
                             return;
@@ -152,11 +165,13 @@ module.exports = {
                 }
             } 
 
+            // Se for uma pergunta onde o chatbot pode responder dentro de seu próprio contexto.
             res.status(200).json({
-                type: 'chat-answer',
+                type: typeMessages.chat_answer,
                 response: result
             });
         } catch (error) {
+            // Tratativa de erro
             console.log('[ERROR!] Fail at AssistantController.js in DealConversation function.', error);
             next(error)
         }

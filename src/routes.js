@@ -1,3 +1,7 @@
+/**
+ * Controle de rotas para requisição das APIs
+ */
+
 const express = require('express');
 const AssistantController = require('./controllers/AssistantController');
 const UnderstandingController = require('./controllers/UnderstandingController');
@@ -18,11 +22,6 @@ try {
 
     module.exports = routes;
 } catch (error) {
-    console.log('[ERROR!] Fail at routes.js', error)  
-    res.status(error.code || 500).json({ 
-        message: 'Falha na comunicação com o watson', 
-        error: error.message 
-    });
-    
+    console.log('[ERROR!] Fail at routes.js', error)      
     throw error;
 }
