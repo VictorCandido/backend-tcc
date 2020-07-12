@@ -110,3 +110,5 @@ Como **body** da requisição, é necessário passar o seguinte objeto:
 }
 ```
 A API irá retornar o resumo em forma de **String**.
+# Frontend TCC
+Para rodar o frontend, desenvolvido em Angular, acesse [este repositório](https://github.com/VictorCandido/frontend-tcc) e siga os mesmos passos. Necessário ter instalado o [Angular CLI](https://cli.angular.io/).
