@@ -48,7 +48,7 @@ module.exports = {
                 // Se a intenção for relacionado a uma dúvida
                 if (result.intents[0].intent === "duvida") {
                     let categoriesArray = []
-                    let validaCategory = false;
+                    let validaCategory = false;                 
 
                     const { text } = result.input;
     
@@ -59,46 +59,59 @@ module.exports = {
                     const analysisResults = await UnderstandingController.getUnderstanding(textInEnglish)
                     const { keywords, categories } = analysisResults.result;
 
-                    // Faz a validação do contexto da pergunta enviada pelo aluno
-                    categories.forEach(category => {
-                        category.label.split('/').forEach(split => {
-                            if (split) categoriesArray.push(split)
-                        })
-                    })
+                    Object.assign(context, { keywords, originalQuestion: text });
+                    const resposta = await QuestionController.findAnswer(context, systemRelevance);   
 
-                    for (var i in context.categories) {
-                        if (categoriesArray.find(x => x === context.categories[i])) {
-                            validaCategory = true;
-                            break;
-                        } 
-                    }
-
-                    if (!validaCategory) {
+                    if (resposta) {
+                        // Se tiver encontrado uma resposta, retorna ela.
                         res.status(200).json({
-                            type: typeMessages.not_allowed
+                            type: typeMessages.db_answer,
+                            response: resposta
+                        })
+
+                        return;
+                    } else {
+                        // Faz a validação do contexto da pergunta enviada pelo aluno
+                        categories.forEach(category => {
+                            category.label.split('/').forEach(split => {
+                                if (split) categoriesArray.push(split)
+                            })
+                        })
+
+                        for (var i in context.categories) {
+                            if (categoriesArray.find(x => x === context.categories[i])) {
+                                validaCategory = true;
+                                break;
+                            } 
+                        }
+
+                        if (!validaCategory) {
+                            res.status(200).json({
+                                type: typeMessages.not_allowed
+                            })
+                            return;
+                        }
+
+                        // Consulta a palavra-chave na API da Wikipedia
+                        const wikipediaSentences = await WikipediaController.getWikipediaSentences(keywords[0].text)
+                        const sentence = wikipediaSentences[0] + ' ' + wikipediaSentences[1];
+
+                        // Retorna o conteúdo encontrado para português
+                        const backToPortuguese = await TranslatorController.translate(sentence, 'pt')
+                        
+                        const finalResult =  {
+                            originalQuestion: text,
+                            text: backToPortuguese,
+                            keywords
+                        };
+        
+                        // Retorno da requisição
+                        res.status(200).json({
+                            type: typeMessages.question_success,
+                            response: finalResult
                         })
                         return;
                     }
-
-                    // Consulta a palavra-chave na API da Wikipedia
-                    const wikipediaSentences = await WikipediaController.getWikipediaSentences(keywords[0].text)
-                    const sentence = wikipediaSentences[0] + ' ' + wikipediaSentences[1];
-
-                    // Retorna o conteúdo encontrado para português
-                    const backToPortuguese = await TranslatorController.translate(sentence, 'pt')
-                    
-                    const finalResult =  {
-                        originalQuestion: text,
-                        text: backToPortuguese,
-                        keywords
-                    };
-    
-                    // Retorno da requisição
-                    res.status(200).json({
-                        type: typeMessages.question_success,
-                        response: finalResult
-                    })
-                    return;
                 } 
 
                 // Tratativa da resposta de "A resposta foi útil?"
@@ -113,32 +126,10 @@ module.exports = {
                     } else {
                         // Consulta no banco de dados todas as respostas salvas e analisa de acordo com a relevancia
                         // para que seja encontrada uma resposta correta já registrada ou não.
-                        const dbQuestions = await QuestionController.findAll();
-                        let resposta = false;
 
-                        for (var i in dbQuestions) {
-                            const keywords = JSON.parse(dbQuestions[i].keywords);
+                        console.log('context', context);
 
-                            let counter = 0;
-
-                            for (var k in keywords) {
-                                for (var j in context.keywords) {
-                                    if (context.keywords[j].text.toLocaleLowerCase() === keywords[k].text.toLocaleLowerCase()) {
-                                        const relevanceDiff = Math.abs(context.keywords[j].relevance - keywords[k].relevance);
-
-                                        if (relevanceDiff > systemRelevance) continue;
-
-                                        counter++;
-                                        break;
-                                    }
-                                }                                
-                            }
-
-                            if (counter === context.keywords.length) {
-                                resposta = dbQuestions[i];
-                                break;
-                            }
-                        }
+                        const resposta = await QuestionController.findAnswer(context, systemRelevance);
 
                         if (resposta) {
                             // Se tiver encontrado uma resposta, retorna ela.
